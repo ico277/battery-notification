@@ -18,6 +18,6 @@
 
 /*
  *  log directory path
- *  to disable logs uncomment this
+ *  to disable logs comment this out
  */
 #define LOG_FILE_PATH "/var/log/battery-notification/"
