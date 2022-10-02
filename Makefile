@@ -20,10 +20,10 @@ clean:
 	rm ./$(EXECUTABLE)_debug.out 2> /dev/null || true
 	rm ./vgcore* 2> /dev/null || true
 
-run: build
+run: ./$(EXECUTABLE).out
 	./$(EXECUTABLE).out
 
 debug: clean
-	$(CC) $(CFILES) -o $(EXECUTABLE)_debug.out $(CFLAGS)
-	valgrind --leak-check=full --show-leak-kinds=all ./$(EXECUTABLE)_debug.out
+	$(CC) $(CFILES) -fsanitize=address -o $(EXECUTABLE)_debug.out $(CFLAGS) -DDEBUG
+	./$(EXECUTABLE)_debug.out
 
