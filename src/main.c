@@ -3,8 +3,10 @@
 #include <signal.h>
 #include <errno.h>
 #include <unistd.h>
+#include <string.h>
 
 #include "config.h"
+#include "battery_states.h"
 
 // TODO add logfile
 #define LOG(str...) \
@@ -12,17 +14,17 @@
 
 int get_battery_level(void) {
     // open file
-    FILE *capacity_file = fopen(BATTERY_PATH "/capacity", "r");
+    FILE *capacity_file = fopen(BAT_PATH "/capacity", "r");
     if (capacity_file == NULL) {
-        LOG("Error: Could not open '" BATTERY_PATH "/capacity'!\n");
+        LOG("Error: Could not open '" BAT_PATH "/capacity'!\n");
         return -1;
     }
     // reading file
-    char line[1024] = {0};
-    fread(line, 1023, 1, capacity_file);
-    line[1023] = '\0'; // NULL terminate
+    char line[128] = {0};
+    fread(line, 127, 1, capacity_file);
+    line[127] = '\0'; // NULL terminate
     if (ferror(capacity_file)) {
-        LOG("Error: Reading '" BATTERY_PATH " /capacity' " "failed!\n");
+        LOG("Error: Reading '" BAT_PATH " /capacity' " "failed!\n");
         return -1;
     }
     fclose(capacity_file);
@@ -36,6 +38,29 @@ int get_battery_level(void) {
     return level;
 }
 
+int is_charging() {
+    // open file
+    FILE *status_file = fopen(BAT_PATH "/status", "r");
+    if (status_file == NULL) {
+        LOG("Error: Could not open '" BAT_PATH "/status'!\n");
+        return -1;
+    }
+    // reading file
+    char line[9] = {0};
+    fread(line, 8, 1, status_file);
+    line[8] = '\0'; // NULL terminate
+    if (ferror(status_file)) {
+        LOG("Error: Reading '" BAT_PATH " /status' " "failed!\n");
+        return -1;
+    }
+    fclose(status_file);
+    // check if charging by comparing strings
+    if (strcmp("Charging", line) == 0) {
+        return 1;
+    }
+    return 0;
+}
+
 void sig_handler(int sig) {
     // TODO add logfile entry
     exit(0);
@@ -45,7 +70,7 @@ int main(int argc, char **argv) {
     // add ctrl+c signal handler
     signal(SIGINT, sig_handler);
     // main battery check loop
-    int last_state = -1;
+    int last_state = BAT_STATE_UNDEFINED;
     while (1) {
         // sleep
         sleep(SLEEP_TIME);
@@ -55,25 +80,37 @@ int main(int argc, char **argv) {
             LOG("Error: Could not get battery capacity!\n");
             exit(-1);
         }
+        // check if charging
+        if (is_charging()) {
+            if (last_state != BAT_STATE_CHARGING) {
+                puts("CHARGING NOTIFICATION");
+                last_state = BAT_STATE_CHARGING;
+            }
+            continue;
+        } else if (last_state == BAT_STATE_CHARGING) {
+            puts("STOP CHARGING NOTIFICATION");
+            last_state = BAT_STATE_UNDEFINED;
+            continue;
+        }
         // check battery percentage
-        if (level < BATTERY_LEVEL_CRITICAL) {
-            if (last_state != 0) {
+        if (level < BAT_LEVEL_CRITICAL) {
+            if (last_state != BAT_STATE_CRITICAL) {
                 puts("CRITICAL NOTIFICATION");
-                last_state = 0;
+                last_state = BAT_STATE_CRITICAL;
             }
             continue;
         }
-        else if (level < BATTERY_LEVEL_LOW) {
-            if (last_state != 1) {
+        else if (level < BAT_LEVEL_LOW) {
+            if (last_state != BAT_STATE_LOW) {
                 puts("LOW NOTIFICATION");
-                last_state = 1;
+                last_state = BAT_STATE_LOW;
             }
             continue;
         }
-        else if (level >= BATTERY_LEVEL_FULL) {
-            if (last_state != 2) {
+        else if (level >= BAT_LEVEL_FULL) {
+            if (last_state != BAT_STATE_FULL) {
                 puts("FULL NOTIFICATION");
-                last_state = 2;
+                last_state = BAT_STATE_FULL;
             }
             continue;
         }

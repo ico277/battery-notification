@@ -2,11 +2,13 @@
  *  path to the battery directory
  *  in this directory there must atleast be a file named "capacity"
  *  for the current battery capacity as a percentage
+ *  and a file called "status" that shows the current status like
+ *  "Charging", "Discharging", etc..
  */
 #ifdef DEBUG
-#define BATTERY_PATH "./testbat"
+#define BAT_PATH "./testbat"
 #else
-#define BATTERY_PATH "/sys/class/power_supply/BAT0"
+#define BAT_PATH "/sys/class/power_supply/BAT0"
 #endif
 
 /*
@@ -15,18 +17,17 @@
 #ifdef DEBUG
 #define SLEEP_TIME 1
 #else
-#define SLEEP_TIME 60
+#define SLEEP_TIME 30
 #endif
 
 /*
  *  battery levels in percentage
  */
-#define BATTERY_LEVEL_FULL 95
-#define BATTERY_LEVEL_LOW 15
-#define BATTERY_LEVEL_CRITICAL 5
+#define BAT_LEVEL_FULL 95
+#define BAT_LEVEL_LOW 20
+#define BAT_LEVEL_CRITICAL 10
 
 /*
  *  log directory path
- *  to disable logs comment this out
  */
 #define LOG_FILE_PATH "/var/log/battery-notification/"

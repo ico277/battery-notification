@@ -1,0 +1,6 @@
+#pragma once
+#define BAT_STATE_CHARGING 0
+#define BAT_STATE_CRITICAL 1
+#define BAT_STATE_LOW 2
+#define BAT_STATE_FULL 3
+#define BAT_STATE_UNDEFINED -1
