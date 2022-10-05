@@ -2,12 +2,13 @@ PREFIX = /usr/local
 CC = gcc
 CFILES = $(wildcard src/*.c)
 EXECUTABLE = batterry-notification
-CFLAGS = -O2
+CFLAGS = -O2 $(shell pkg-config --cflags --libs libnotify)
+LDFLAGS = -lnotify
 
 .PHONY: install clean run debug
 
 $(EXECUTABLE).out:
-	$(CC) $(CFILES) -o $(EXECUTABLE).out $(CFLAGS)
+	$(CC) $(CFILES) -o $(EXECUTABLE).out $(LDFLAGS) $(CFLAGS)
 
 install: ./$(EXECUTABLE).out
 	cp ./$(EXECUTABLE).out $(PREFIX)/bin/$(EXECUTABLE)
@@ -24,6 +25,6 @@ run: ./$(EXECUTABLE).out
 	./$(EXECUTABLE).out
 
 debug: clean
-	$(CC) $(CFILES) -fsanitize=address -o $(EXECUTABLE)_debug.out $(CFLAGS) -DDEBUG
+	$(CC) $(CFILES) -fsanitize=address -o $(EXECUTABLE)_debug.out $(LDFLAGS) $(CFLAGS) -DDEBUG
 	./$(EXECUTABLE)_debug.out
 

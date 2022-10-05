@@ -5,6 +5,8 @@
 #include <unistd.h>
 #include <string.h>
 
+#include <libnotify/notify.h>
+
 #include "config.h"
 #include "battery_states.h"
 
@@ -67,6 +69,12 @@ void sig_handler(int sig) {
 }
 
 int main(int argc, char **argv) {
+    NotifyNotification *notif;
+    notify_init("some-name");
+    notif = notify_notification_new("title", "message", NULL);
+
+    notify_notification_show(notif, NULL);
+
     // add ctrl+c signal handler
     signal(SIGINT, sig_handler);
     // main battery check loop
