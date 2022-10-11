@@ -1,9 +1,9 @@
 PREFIX = /usr/local
 CC = gcc
 CFILES = $(wildcard src/*.c)
-EXECUTABLE = batterry-notification
-CFLAGS = -O2 $(shell pkg-config --cflags --libs libnotify)
-LDFLAGS = -lnotify
+EXECUTABLE = battery-notification
+CFLAGS = -O2 -Wno-unused-result
+LDFLAGS = $(shell pkg-config --cflags --libs libnotify) -lnotify
 
 .PHONY: install clean run debug
 
