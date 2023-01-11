@@ -17,7 +17,7 @@
 #include "battery_states.h"
 #include "language.h"
 
-#define VERSION "1.0.0-release"
+#define VERSION "2.0.0-dev"
 
 // TODO add logfile
 #define LOG(str...) \
