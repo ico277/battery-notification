@@ -1,0 +1,6 @@
+#define NOTIFICATION_TITLE "Battery Status"
+#define NOTIFICATION_CRITICAL "Battery level is critically low!"
+#define NOTIFICATION_LOW "Battery level is low"
+#define NOTIFICATION_FULL "Battery level is full"
+#define NOTIFICATION_CHARGING "Battery is now charging"
+#define NOTIFICATION_STOP_CHARGING "Battery stopped charging"

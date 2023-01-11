@@ -4,6 +4,7 @@
 #include <errno.h>
 #include <unistd.h>
 #include <string.h>
+#include <signal.h>
 
 #include <libnotify/notify.h>
 #include <glib.h>
@@ -14,6 +15,7 @@
 #include "config.h"
 #endif
 #include "battery_states.h"
+#include "language.h"
 
 #define VERSION "1.0.0-release"
 
@@ -26,6 +28,9 @@ NotifyNotification *BatteryLowNotification = NULL;
 NotifyNotification *BatteryFullNotification = NULL;
 NotifyNotification *BatteryChargingNotification = NULL;
 NotifyNotification *BatteryStopChargingNotification = NULL;
+
+FILE *pidfile = NULL;
+char pidfile_path[PATH_MAX] = {0};
 
 int get_battery_level(void) {
     // open file
@@ -77,6 +82,39 @@ int is_charging(void) {
 }
 
 void init(void) {
+    // check for pid file
+    char *home = getenv("HOME");
+    if (home == NULL) {
+        LOG("Error: HOME env var unset.\n");
+        exit(-1);
+    }
+    snprintf(pidfile_path,PATH_MAX, "%s/.battery-notification.pid", home);
+    pidfile = fopen(pidfile_path, "r");
+    if (pidfile == NULL) {
+        pidfile = fopen(pidfile_path, "w");
+        pid_t pid = getpid();
+        fprintf(pidfile, "%d", pid);
+        fflush(pidfile);
+    }
+    else {
+        // read pid
+        char line[1024];
+        fgets(line, 1024, pidfile);
+        line[1023] = '\0';
+        pid_t pid = atoi(line);
+        if (!kill(pid, 0)) {
+            LOG("Error: another instance is running!\n");
+            exit(-1);
+        }
+        else {
+            LOG("Warning: PID file exists but not running, seems like it crashed.\n"); 
+            fclose(pidfile);
+            pidfile = fopen(pidfile_path, "w");
+            pid_t pid = getpid();
+            fprintf(pidfile, "%d", pid);
+            fflush(pidfile);
+        }
+    }
     //TODO add logfile entry
     // init libnotify
     if (!notify_init("Battery Notification")) {
@@ -84,11 +122,11 @@ void init(void) {
         exit(-1);
     }
     // create notifications
-    BatteryCriticalNotification = notify_notification_new("Battery Crtical", "Battery level is critically low!", "battery");
-    BatteryLowNotification = notify_notification_new("Battery Low", "Battery level is low", "battery");
-    BatteryFullNotification = notify_notification_new("Battery Full", "Battery level is full", "battery");
-    BatteryChargingNotification = notify_notification_new("Battery Charging", "Battery is now charging", "battery");
-    BatteryStopChargingNotification = notify_notification_new("Battery Stopped Charging!", "Battery stopped charging", "battery");
+    BatteryCriticalNotification = notify_notification_new(NOTIFICATION_TITLE, NOTIFICATION_CRITICAL, "battery");
+    BatteryLowNotification = notify_notification_new(NOTIFICATION_TITLE, NOTIFICATION_LOW, "battery");
+    BatteryFullNotification = notify_notification_new(NOTIFICATION_TITLE, NOTIFICATION_FULL, "battery");
+    BatteryChargingNotification = notify_notification_new(NOTIFICATION_TITLE, NOTIFICATION_CHARGING, "battery");
+    BatteryStopChargingNotification = notify_notification_new(NOTIFICATION_TITLE, NOTIFICATION_STOP_CHARGING, "battery");
     // set notification urgency
     notify_notification_set_urgency(BatteryCriticalNotification, NOTIFY_URGENCY_CRITICAL);
     notify_notification_set_urgency(BatteryLowNotification, NOTIFY_URGENCY_CRITICAL);
@@ -98,6 +136,11 @@ void init(void) {
 }
 
 void uninit(void) {
+    // close and rmeove file
+    if (pidfile != NULL) {
+        fclose(pidfile);
+        remove(pidfile_path);
+    }
     // uninit libnotify
     if (notify_is_initted())
         notify_uninit();

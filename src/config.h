@@ -10,7 +10,7 @@
 /*
  *  the amount of time in seconds to sleep before checking the battery percentage
  */
-#define SLEEP_TIME 30
+#define SLEEP_TIME 2
 
 /*
  *  battery levels in percentage
@@ -18,3 +18,4 @@
 #define BAT_LEVEL_FULL 99
 #define BAT_LEVEL_LOW 20
 #define BAT_LEVEL_CRITICAL 10
+
